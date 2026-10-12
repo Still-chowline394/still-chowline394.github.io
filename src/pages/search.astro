@@ -1,0 +1,58 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+// define:vars 把 base 注入内联脚本（is:inline 脚本不走 Vite，import.meta.env 不会被替换）
+const base = import.meta.env.BASE_URL;
+---
+
+<BaseLayout title="搜索" description="站内搜索">
+  <h1 class="page-title">搜索</h1>
+  <div id="search"></div>
+
+  <p id="search-fallback" class="search-fallback" hidden>搜索索引未加载。</p>
+
+  <!--
+    Pagefind UI 的正确加载方式（踩坑记录见 PLAN.md 第 5 条）：
+    pagefind-ui.js 是 IIFE，只挂 window.PagefindUI，**不导出任何东西**。
+    用动态 import() 会在模块链接阶段失败，且很容易被 catch 静默吞掉——
+    表现为「构建全绿、生产环境搜索不可用」。必须按经典 <script> 加载后读全局。
+  -->
+  <script is:inline define:vars={{ base }}>
+    (function () {
+      function loadScript(src) {
+        return new Promise(function (resolve, reject) {
+          var s = document.createElement('script');
+          s.src = src;
+          s.onload = resolve;
+          s.onerror = function () {
+            reject(new Error('加载失败 ' + src));
+          };
+          document.head.appendChild(s);
+        });
+      }
+
+      loadScript(base + 'pagefind/pagefind-ui.js').then(
+        function () {
+          if (!window.PagefindUI) {
+            throw new Error('PagefindUI 全局缺失');
+          }
+          new window.PagefindUI({
+            element: '#search',
+            showSubResults: true,
+            bundlePath: base + 'pagefind/',
+          });
+        },
+        function (err) {
+          // fail loud：不把「搜索不可用」当正常态静默呈现
+          var el = document.getElementById('search-fallback');
+          if (el) {
+            el.hidden = false;
+            el.textContent =
+              '搜索索引未加载：' + (err && err.message ? err.message : err);
+          }
+          console.error(err);
+        },
+      );
+    })();
+  </script>
+</BaseLayout>

@@ -1,0 +1,63 @@
+---
+title: '第一篇文章'
+description: '验证博客骨架：代码块与复制按钮、提示框组件、标签、显式 slug。'
+pubDate: 2026-10-12
+tags: ['随笔', '建站']
+slug: 'hello-world'
+---
+
+import Callout from '../../components/Callout.astro';
+
+这是一篇用来验证骨架的文章。它同时演示四件事：**代码块**、**提示框组件**、**标签**、
+以及 **slug 与文件名解耦**。
+
+## 代码块
+
+代码块顶部有一条机框：左边是语言标注，右边是复制按钮。高亮是构建期用 Shiki 生成的，
+运行时没有任何 JS 语法高亮器。
+
+```ts
+// slug 显式：URL 不受文件名影响
+const href = `/posts/${post.data.slug ?? post.id}`;
+
+// getCollection() 的返回顺序是非确定的，必须自己排序
+const posts = (await getCollection('posts')).sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+```
+
+<Callout type="note" title="关于明暗主题">
+  右上角可以切换主题。首次访问跟随系统偏好，之后记住你的选择。
+  代码块的两套配色也在构建期一次性生成。
+</Callout>
+
+## 语言标注
+
+代码块左上角显示语言，值取自 Shiki 写进 `data-language` 属性的内容。右上角是复制按钮。
+
+**但文件名标不了。** 在围栏后面写 meta（例如 `title="main.c"`）在 Astro 7 上**不会出现在
+HTML 里**——实测产物只有 `data-language`，既没有 `data-meta` 也没有 `title` 属性，meta
+被管线丢掉了。要标文件名得自己写 Sätteri 的 hast 插件，为一个装饰件引入插件依赖不划算，
+所以暂时只标语言。
+
+```c
+int main(void) {
+  int x = 0;
+  return x;
+}
+```
+
+## slug 为什么显式
+
+这篇文件的文件名是 `hello-world.mdx`，slug 也写成 `hello-world`，看起来多此一举。
+但将来如果我把标题改成《写给三个月前的自己》，文件名大概会跟着改，而
+`/posts/hello-world` 这个地址**不能变**——它可能已经被引用过、被搜索引擎收录过。
+
+<Callout type="warn" title="URL 一旦发布就不能改">
+  这也是整套方案里少数几个「现在不做、将来代价很大」的决定之一，
+  所以在 schema 阶段就把它钉死。
+</Callout>
+
+## 标签
+
+文章底部有标签，点击可以跳到标签聚合页。标签页和归档页都是构建期静态生成的。

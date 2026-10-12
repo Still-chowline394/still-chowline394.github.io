@@ -1,0 +1,103 @@
+/* ============================================================================
+   设计令牌 —— 单一真相来源
+   ----------------------------------------------------------------------------
+   纪律：
+   1. 颜色字面量只允许出现在本文件；组件与页面一律 var(--...) 引用。
+   2. 明暗双值用 light-dark()，跟随 color-scheme；data-theme 覆写它。
+   3. 对比度由 scripts/check-contrast.mjs 审计；阈值与豁免理由在该文件显式登记。
+
+   ★ 分区原则（2026-10-13 用户拍板）：色系**只上"四周与按键"**
+     （页面底 / 页头页脚 / 按钮 / 标签 / 边框），**绝不进入文章主体**。
+     故令牌分两组，在色温上物理隔离：
+       · chrome-*  —— 暖中性。定调用，只出现在文章区之外。
+       · surface-* —— **中性、禁止带暖色**。文章正文与代码块用这一组。
+     两组底色不同（暖底 vs 纯白 / 中性深），形成"暖桌上的一张白纸"，
+     而不是在同一片底色上混杂两种色温。
+   ========================================================================== */
+
+:root {
+  color-scheme: light dark;
+}
+[data-theme='light'] {
+  color-scheme: light;
+}
+[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+:root {
+  /* --- 字体栈：一律系统字体。中文 webfont 动辄数 MB，代价与收益倒挂 --- */
+  --font-sans:
+    system-ui, -apple-system, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, 'Cascadia Mono', Consolas, 'Liberation Mono',
+    'Noto Sans Mono CJK SC', monospace;
+
+  /* --- 字号阶梯 --- */
+  --fs-xs: 0.8125rem; /* 13px  元信息 */
+  --fs-sm: 0.875rem; /* 14px  辅助 */
+  --fs-base: 1.0625rem; /* 17px  正文 */
+  --fs-lg: 1.25rem; /* 20px  h4 */
+  --fs-xl: 1.5rem; /* 24px  h3 */
+  --fs-2xl: 1.875rem; /* 30px  h2 */
+  --fs-3xl: 2.25rem; /* 36px  文章标题 */
+
+  /* --- 行高：中文比英文松 --- */
+  --lh-tight: 1.25;
+  --lh-snug: 1.5;
+  --lh-base: 1.8;
+  --lh-code: 1.65;
+
+  /* --- 行宽：按中文视觉宽度定，不是英文 ch 单位 --- */
+  --measure: 40rem;
+
+  /* --- 间距 --- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+
+  --radius: 2px; /* 方角：圆角一律显得"精致"，与锈/废墟气质相反 */
+  --radius-sm: 2px;
+
+  /* ══════════════════════════════════════════════════════════════════
+     第一组 · chrome —— 只用于文章区之外
+     ★ 明暗两套走**不同的色温**（2026-10-13 用户拍板）：
+         · 浅色 = 灰砖 · 青砖冷灰  ——"水泥地返着白气"
+         · 深色 = 铁锈 · 暖棕锈    ——"铁盒的锈分了六层 / 煤油灯"
+       翻转主题＝从青砖的白天进到锈与灯火的夜里。
+       两套都以**冷/暖对冲**立住：暖色只由重音（锈）提供。
+     ══════════════════════════════════════════════════════════════════ */
+  --color-bg: light-dark(#d3d9df, #1a1410); /* 青砖 / 深锈底 */
+  --color-chrome: light-dark(#dee3e8, #241b14); /* 页头/页脚底 */
+  --color-chrome-subtle: light-dark(#c2c9d1, #33271d); /* 按钮/标签底 */
+  --color-chrome-border: light-dark(#98a2ad, #6b503a); /* 砖缝 / 锈色描边 */
+  --color-chrome-fg: light-dark(#1a1f26, #ece2da);
+  --color-chrome-muted: light-dark(#454e58, #bfa88f);
+
+  /* ══════════════════════════════════════════════════════════════════
+     第二组 · surface（中性，**禁止带暖色**）—— 文章正文区专用
+     刻意与 chrome 分属不同色温：暖底上的白纸，而不是染色的纸
+     ══════════════════════════════════════════════════════════════════ */
+  --color-surface: light-dark(#ffffff, #1b1b1b);
+  --color-surface-fg: light-dark(#1a1a1a, #e8e8e8);
+  --color-surface-muted: light-dark(#575757, #a6a6a6);
+  --color-surface-border: light-dark(#e6e6e6, #303030);
+
+  /* 代码块：中性底，保护语法着色不被底色的暖调带脏 */
+  --color-code-bg: light-dark(#f2f2f2, #242424);
+  --color-code-fg: light-dark(#1f1f1f, #e4e4e4);
+
+  /* ══════════════════════════════════════════════════════════════════
+     重音 · 铁锈 —— 两套主题共用的唯一暖色
+     "铁盒的锈分了六层" / "铜黄色的光"。浅色下压深以过对比度，深色下提亮成锈斑。
+     ══════════════════════════════════════════════════════════════════ */
+  --color-accent: light-dark(#7d3517, #d9823c);
+  --color-accent-subtle: light-dark(#e6dcd6, #3a2413);
+  --color-fg-on-accent: light-dark(#ffffff, #1a1410);
+}

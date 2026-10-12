@@ -1,0 +1,70 @@
+---
+title: 'LaTeX 在 Astro 7 上到底能不能用'
+description: '实测两件事：Sätteri 的 math 默认关闭，而且开了也只是标记、并不渲染。'
+pubDate: 2026-10-13
+tags: ['Astro', '踩坑']
+slug: 'math-support'
+---
+
+这篇是**实测记录**，不是转述文档。结论有四条，每条都有产物或源码依据。
+
+## 一、Sätteri 的 math 默认关着
+
+`satteri/dist/compile.d.ts` 写得很直白：
+
+```ts
+/** Math blocks and inline math. Default: false. */
+math?: boolean | MathOptions;
+```
+
+## 二、不开的后果不是"不渲染"，是**构建失败**
+
+`$...{x}...$` 在 math 未开启时会当普通文本交给 MDX 的 JSX 解析，`{x}` 被当成表达式：
+
+```
+[ERROR] ReferenceError: x is not defined
+[ERROR] [build] Caught error rendering /posts/math-support
+```
+
+**整页崩掉**，不是退化显示。
+
+## 三、开了之后——**只标记，不渲染**
+
+开启方式：
+
+```js
+// astro.config.mjs
+import { satteri } from '@astrojs/markdown-satteri';
+
+export default defineConfig({
+  markdown: {
+    processor: satteri({ features: { math: true } }),
+  },
+});
+```
+
+然后产物是这样的：
+
+```html
+<code class="language-math math-inline">\frac{1}{2}</code>
+<pre><code class="language-math math-display">\int_0^1 x^2 \, dx</code></pre>
+```
+
+**LaTeX 原样躺在 `<code>` 里，一个数学符号都没排。** Sätteri 做的是"识别并标记出这是数学"，
+排版权在渲染器手里——KaTeX 或 MathJax。
+
+## 四、所以"原生支持 math"这个说法要打个折
+
+准确的说法是：**Sätteri 原生支持数学的*识别*，不支持数学的*排版***。
+要真出公式，得自己挂渲染器。好在 Sätteri 给了 hast 插件口子
+（`defineHastPlugin`），可以在**构建期**把 `code.language-math` 换成渲染结果——
+这样运行时依然零 JS，代价只是构建时长和构建期依赖。
+
+渲染器还有两种取法，成本差得很远：
+
+| 方案 | 运行时成本 | 说明 |
+|---|---|---|
+| KaTeX `output: 'mathml'` | **零**（无 CSS、无字体） | 浏览器原生排 MathML；Chrome 109+ / Safari / Firefox 均支持 |
+| KaTeX `output: 'html'` | CSS ~23 KB + 一整套数学字体 | 排版最精细，但要把字体也发出去 |
+
+对一个全站 CSS 才 8 KB、且明令"不用 webfont"的博客，前者显然更合身。

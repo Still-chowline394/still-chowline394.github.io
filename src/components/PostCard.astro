@@ -1,0 +1,27 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  post: CollectionEntry<'posts'>;
+}
+
+const { post } = Astro.props;
+
+// slug 显式优先，缺省回退 id（文件名）
+const href = `/posts/${post.data.slug ?? post.id}`;
+const date = new Intl.DateTimeFormat('zh-CN', {
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+}).format(post.data.pubDate);
+---
+
+<li class="post-card">
+  <h2 class="post-card__title">
+    <a href={href}>{post.data.title}</a>
+  </h2>
+  <p class="post-card__meta">
+    <time datetime={post.data.pubDate.toISOString()}>{date}</time>
+  </p>
+  <p class="post-card__desc">{post.data.description}</p>
+</li>

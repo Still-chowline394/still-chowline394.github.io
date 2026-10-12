@@ -1,0 +1,102 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import BaseLayout from './BaseLayout.astro';
+import TagList from '../components/TagList.astro';
+
+interface Props {
+  post: CollectionEntry<'posts'>;
+}
+
+const { post } = Astro.props;
+
+const fmt = new Intl.DateTimeFormat('zh-CN', {
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+});
+---
+
+<BaseLayout title={post.data.title} description={post.data.description}>
+  <article>
+    <header class="article-header">
+      <h1 class="article-title">{post.data.title}</h1>
+      <p class="article-meta">
+        <time datetime={post.data.pubDate.toISOString()}>
+          {fmt.format(post.data.pubDate)}
+        </time>
+        {
+          post.data.updatedDate && (
+            <span>
+              {' '}
+              · 更新于 {fmt.format(post.data.updatedDate)}
+            </span>
+          )
+        }
+      </p>
+      <TagList tags={post.data.tags} />
+    </header>
+
+    <div class="prose">
+      <slot />
+    </div>
+  </article>
+
+  <!--
+    代码块装饰：给每个 pre.astro-code 包一层 figure.code-figure，
+    顶部生成一条 code-bar（左侧语言/文件名标注，右侧复制按钮）。
+
+    语言取自 Shiki 写入的 data-language；若围栏写了 meta（如 ```c title="main.c"），
+    meta 优先显示，这样既能标类型也能标文件名。
+
+    MDX 内容不走组件，所以只能在渲染后统一注入。刻意用内联脚本而非框架：
+    这是全站唯一一处功能性 JS（连同主题切换，约 1 KB）。
+  -->
+  <script is:inline>
+    document.querySelectorAll('pre.astro-code').forEach((pre) => {
+      if (
+        pre.parentElement &&
+        pre.parentElement.classList.contains('code-figure')
+      ) {
+        return;
+      }
+
+      const lang = pre.getAttribute('data-language') || 'text';
+      const meta = (pre.getAttribute('data-meta') || '').trim();
+      const label = meta || lang;
+
+      const bar = document.createElement('div');
+      bar.className = 'code-bar';
+
+      const span = document.createElement('span');
+      span.className = 'code-lang';
+      span.textContent = label;
+
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'code-copy';
+      btn.textContent = '复制';
+      btn.setAttribute('aria-label', '复制代码');
+
+      btn.addEventListener('click', async () => {
+        const code = pre.querySelector('code');
+        const text = code ? code.innerText : pre.innerText;
+        try {
+          await navigator.clipboard.writeText(text);
+          btn.textContent = '已复制';
+        } catch {
+          btn.textContent = '复制失败';
+        }
+        setTimeout(() => {
+          btn.textContent = '复制';
+        }, 1600);
+      });
+
+      bar.append(span, btn);
+
+      const fig = document.createElement('figure');
+      fig.className = 'code-figure';
+      pre.parentNode.insertBefore(fig, pre);
+      fig.append(bar, pre);
+    });
+  </script>
+</BaseLayout>

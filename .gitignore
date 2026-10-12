@@ -1,0 +1,23 @@
+# 构建产物
+dist/
+.astro/
+
+# 依赖
+node_modules/
+
+# Pagefind 生成的搜索索引（构建期产物，不入库）
+public/pagefind/
+
+# 环境
+.env
+.env.production
+
+# 编辑器
+.DS_Store
+*.log
+
+# 自审截图（可重新生成，做法见 PLAN.md §六之二）
+preview/
+
+# 无头浏览器临时 profile
+.edge_shot/

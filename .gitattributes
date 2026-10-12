@@ -1,0 +1,21 @@
+# 行尾纪律
+# ----------------------------------------------------------------------------
+# 不加这条的话，Windows 上 core.autocrlf=true 会把检出写成 CRLF：
+# 源文件在工作区是 CRLF、入库是 LF，于是每次改动都产生整文件「假改动」，
+# git blame 随之失效。这里显式声明**入库与工作区一律 LF**。
+* text=auto eol=lf
+
+# 二进制：禁止任何行尾转换
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.pdf binary
+
+# 构建产物与锁文件不做 diff 展示
+package-lock.json -diff linguist-generated
+dist/** -diff

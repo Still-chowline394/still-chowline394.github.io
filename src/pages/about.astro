@@ -1,0 +1,51 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import {
+  SITE_NAME,
+  GITHUB_HANDLE,
+  GITHUB_URL,
+  avatarUrl,
+} from '../site.config';
+---
+
+<BaseLayout title="关于" description={`关于 ${SITE_NAME}`}>
+  <h1 class="page-title">关于</h1>
+
+  <div class="prose">
+    <p class="about-card">
+      <img
+        class="about-avatar"
+        src={avatarUrl(160)}
+        alt=""
+        width="72"
+        height="72"
+        loading="lazy"
+        decoding="async"
+      />
+      <span>
+        <strong>{SITE_NAME}</strong><br />
+        <a href={GITHUB_URL} target="_blank" rel="me noopener noreferrer"
+          >GitHub @{GITHUB_HANDLE}</a
+        >
+      </span>
+    </p>
+
+    <p>这里写工程向的随笔与思考。</p>
+
+    <h2>这个博客怎么搭的</h2>
+    <ul>
+      <li>Astro + MDX，默认零运行时 JS（全站外链 JS 为 0）</li>
+      <li>Shiki 构建期语法高亮，明暗双主题，代码块带语言标注与复制按钮</li>
+      <li>设计令牌单一来源在 <code>src/styles/tokens.css</code>；
+        站点身份（名字 / 头像 / GitHub）单一来源在 <code>src/site.config.ts</code></li>
+      <li>头像直取 GitHub 直链，所以换头像即换站内 logo</li>
+      <li>对比度由 <code>npm run contrast</code> 审计，不足须登记豁免理由</li>
+    </ul>
+
+    <h2>写在别处</h2>
+    <ul>
+      <li><a href={GITHUB_URL} target="_blank" rel="me noopener noreferrer">{GITHUB_URL}</a></li>
+      <li><a href="/rss.xml">RSS 订阅</a></li>
+    </ul>
+  </div>
+</BaseLayout>

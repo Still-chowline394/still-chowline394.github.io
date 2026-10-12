@@ -1,0 +1,93 @@
+---
+title: 'Astro 7 把 Markdown 管线换成了 Sätteri'
+description: 'Astro 7.0 起默认处理器从 remark/rehype 换成自研的 Rust 管线，多数旧教程已失效。'
+pubDate: 2026-10-12
+updatedDate: 2026-10-12
+tags: ['Astro', '踩坑']
+slug: 'astro-7-satteri'
+---
+
+import Callout from '../../components/Callout.astro';
+
+搭这个博客时查了 npm registry 的实测值：`astro@7.3.8`、`@astrojs/mdx@8.0.3`，
+Node 需 `>=22.12.0`。而真正影响选型的不是版本号，是依赖清单里透出的代际——
+`zod@4`、`shiki@4`、`vite@8`、`@astrojs/compiler-rs`。
+
+**Astro 7.0 把默认 Markdown 处理器从 remark/rehype 换成了自研的 Sätteri。**
+
+## 这意味着什么
+
+Sätteri 是 Rust 写的：pulldown-cmark 负责 CommonMark 解析，Oxc 负责 MDX 表达式。
+官方口径构建快 15–61%。
+
+后果有两面。
+
+**坏消息**：remark/rehype 管线**不再默认安装**。标准 remark/rehype 包与 Sätteri
+**不兼容**——网上绝大多数「给 Astro 加 KaTeX / 加某个插件」的文章，到 Astro 7 已经
+全部失效。要保留旧管线，得单独装 `@astrojs/markdown-remark` 并改写配置：
+
+```js
+// astro.config.mjs
+import { unified } from '@astrojs/markdown-remark';
+
+export default defineConfig({
+  markdown: {
+    processor: unified({
+      remarkPlugins: [remarkToc],
+      rehypePlugins: [rehypeSlug],
+    }),
+  },
+});
+```
+
+顶层的 `markdown.remarkPlugins` / `rehypePlugins` / `gfm` / `smartypants` 还能用，
+但**已标废弃**，未来大版本移除。
+
+**好消息**：Sätteri **原生**支持 GFM、数学公式、frontmatter、智能标点。博客需要的
+它全有——所以这个博客**一个 remark/rehype 插件都没装**。
+
+## 三个连带的变化
+
+1. **不要加 `rehype-slug`。** Astro 内置的 `rehypeHeadingIds` 已经生成标题 id，
+   并填好 `headings` 数组供目录组件消费。再叠一个 slug 插件会出现两套 id 体系，
+   目录锚点对不上。
+2. **Shiki 主题不用配两遍。** 旧教程说 `markdown.shikiConfig` 只管 `.md`、MDX 要在
+   `mdx({ shikiConfig })` 里再配一次。**这个说法在 Astro 7 + @astrojs/mdx 8 上实测不成立**：
+   本项目的 `astro.config.mjs` 只在 `markdown.shikiConfig` 配了一处，而 `.mdx` 文章的
+   代码块照样拿到了 `github-light github-dark` 双主题。别被旧文章带着多配一遍。
+3. **MDX 的 `recmaPlugins` 在 Sätteri 下不支持。**
+
+<Callout type="warn" title="最该记住的一条">
+  这个博客的所有配置都对着 `astro@7.3.8` 实测过。Astro 的 Markdown 层在两年里换了
+  两代，**任何 Astro 教程在照着做之前都该先确认它写的是哪个版本**——包括这一篇。
+</Callout>
+
+## Shiki 双主题：已用构建产物定论
+
+写这篇文章时这个问题还没落地：两种说法互相矛盾——一种说 `--shiki-light` 存在，
+另一种说首个主题被写进 inline `color`、`--shiki-light` 根本不存在。
+
+**现在有答案了。** 对 `dist/posts/hello-world/index.html` 做变量计数：
+
+```
+  43  --shiki-dark
+   1  --shiki-dark-bg
+```
+
+`--shiki-light` **一次都没出现**。实际标记长这样：
+
+```html
+<pre class="astro-code" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8">
+  <code><span style="color:#6A737D;--shiki-dark:#6A737D">// 注释</span>
+```
+
+结论：
+
+1. **首个主题（浅色）的颜色是 inline `color`**，直接落在每个 span 上。
+2. **后续主题（深色）才生成 `--shiki-dark` 变量**，连 `--shiki-dark-bg` 也只有一份。
+3. 深色模式要覆盖的是 `color: var(--shiki-dark)`；浅色模式**什么都不用覆盖**。
+4. 写 `color: var(--shiki-light) !important` 会解析不到值，把 token 颜色全部抹掉。
+
+还有一条连带结论：**不要覆盖 span 的 `background-color`**。span 底色默认透明，
+若在深色下给每个 span 强设 `--shiki-dark-bg`，会与 pre 的底色不一致，
+代码块会呈现网格状色块。这个博客第一版就写了那句，复查产物时才删掉。

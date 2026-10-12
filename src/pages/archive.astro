@@ -1,0 +1,52 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const posts = (await getCollection('posts', ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+
+const byYear = new Map<number, typeof posts>();
+for (const post of posts) {
+  const year = post.data.pubDate.getFullYear();
+  const bucket = byYear.get(year);
+  if (bucket) {
+    bucket.push(post);
+  } else {
+    byYear.set(year, [post]);
+  }
+}
+
+const dayFmt = new Intl.DateTimeFormat('zh-CN', {
+  month: '2-digit',
+  day: '2-digit',
+});
+---
+
+<BaseLayout title="归档" description="全部文章按年份归档">
+  <h1 class="page-title">归档</h1>
+
+  {
+    [...byYear.entries()].map(([year, items]) => (
+      <section>
+        <h2 class="archive-year">{year}</h2>
+        <ul class="post-list">
+          {items.map((post) => (
+            <li class="post-card">
+              <h3 class="post-card__title">
+                <a href={`/posts/${post.data.slug ?? post.id}`}>
+                  {post.data.title}
+                </a>
+              </h3>
+              <p class="post-card__meta">
+                <time datetime={post.data.pubDate.toISOString()}>
+                  {dayFmt.format(post.data.pubDate)}
+                </time>
+              </p>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))
+  }
+</BaseLayout>

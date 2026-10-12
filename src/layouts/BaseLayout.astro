@@ -1,0 +1,141 @@
+---
+import '../styles/global.css';
+import {
+  SITE_NAME,
+  SITE_DESCRIPTION,
+  GITHUB_HANDLE,
+  GITHUB_URL,
+  avatarUrl,
+} from '../site.config';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = SITE_DESCRIPTION } = Astro.props;
+
+const pageTitle = title === SITE_NAME ? SITE_NAME : `${title} · ${SITE_NAME}`;
+const year = new Date().getFullYear();
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+
+    <!-- 头像直链：GitHub 换头像，这里跟着换（见 src/site.config.ts） -->
+    <link rel="icon" type="image/png" href={avatarUrl(64)} />
+    <link rel="apple-touch-icon" href={avatarUrl(180)} />
+    <!-- rel=me：声明本站在 GitHub 上的同一身份 -->
+    <link rel="me" href={GITHUB_URL} />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+
+    <!-- 防首屏主题闪烁：必须在 body 渲染前确定 data-theme -->
+    <script is:inline>
+      (() => {
+        try {
+          const saved = localStorage.getItem('theme');
+          const theme =
+            saved === 'light' || saved === 'dark'
+              ? saved
+              : matchMedia('(prefers-color-scheme: dark)').matches
+                ? 'dark'
+                : 'light';
+          document.documentElement.dataset.theme = theme;
+        } catch {
+          document.documentElement.dataset.theme = 'light';
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container container-wide">
+        <a class="site-brand" href="/">
+          <img
+            class="site-avatar"
+            src={avatarUrl(64)}
+            alt=""
+            width="28"
+            height="28"
+            decoding="async"
+          />
+          <span class="site-name">{SITE_NAME}</span>
+          <span class="site-handle">@{GITHUB_HANDLE}</span>
+        </a>
+
+        <nav class="site-nav" aria-label="主导航">
+          <a href="/archive">归档</a>
+          <a href="/tags">标签</a>
+          <a href="/search">搜索</a>
+          <a href="/about">关于</a>
+          <a href="/rss.xml">RSS</a>
+          <a
+            href={GITHUB_URL}
+            target="_blank"
+            rel="me noopener noreferrer">GitHub</a
+          >
+          <button
+            class="theme-toggle"
+            type="button"
+            id="theme-toggle"
+            aria-label="切换明暗主题"
+            aria-pressed="false"
+          >
+            <span id="theme-toggle-label">深色</span>
+          </button>
+        </nav>
+      </div>
+    </header>
+
+    <!-- data-pagefind-body：让 Pagefind 只索引正文，不要把导航和页脚算进去 -->
+    <main class="container container-wide" data-pagefind-body>
+      <slot />
+    </main>
+
+    <footer class="site-footer">
+      <div class="container container-wide">
+        <p>
+          © {year} <a href="/">{SITE_NAME}</a>
+          <span class="sep">·</span>
+          <a href={GITHUB_URL} target="_blank" rel="me noopener noreferrer"
+            >GitHub @{GITHUB_HANDLE}</a
+          >
+          <span class="sep">·</span>
+          <a href="/rss.xml">RSS</a>
+          <span class="sep">·</span>
+          <span>用 Astro + MDX 构建</span>
+        </p>
+      </div>
+    </footer>
+
+    <script is:inline>
+      (() => {
+        const btn = document.getElementById('theme-toggle');
+        const label = document.getElementById('theme-toggle-label');
+        if (!btn || !label) return;
+        const sync = () => {
+          const dark = document.documentElement.dataset.theme === 'dark';
+          label.textContent = dark ? '浅色' : '深色';
+          btn.setAttribute('aria-pressed', String(dark));
+        };
+        sync();
+        btn.addEventListener('click', () => {
+          const next =
+            document.documentElement.dataset.theme === 'dark'
+              ? 'light'
+              : 'dark';
+          document.documentElement.dataset.theme = next;
+          try {
+            localStorage.setItem('theme', next);
+          } catch {}
+          sync();
+        });
+      })();
+    </script>
+  </body>
+</html>

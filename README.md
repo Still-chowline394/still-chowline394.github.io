@@ -42,10 +42,19 @@ CODEBUDDY_SAFE_DELETE_ENABLED=0 npm run build
    给该对补 `exempt` 理由，不许静默放行。
 3. **站点身份只在 `src/site.config.ts` 定义**——名字、头像、GitHub 地址。
    改 `GITHUB_HANDLE` 即整体换名；头像取 GitHub 直链，**换头像即换站内 logo**。
-4. **`site` 字段**在 `astro.config.mjs` 里，部署前必须改成真实域名
-   （影响 sitemap 与 RSS 的绝对地址）。
+4. **`site` 字段由 `src/site.config.ts` 的 `SITE_URL` 提供**（当前
+   `https://<user>.github.io`），影响 sitemap 与 RSS 的绝对地址。换域名只改那一行。
 5. **文章标题从 `##` 起**，不要用 `#`——否则单篇出现多个 h1。
 6. **构建前先停掉 `astro preview`**，否则会 `EBUSY: rmdir dist/.prerender/chunks`。
+
+## 部署
+
+推送到 `main` 即自动发布：`.github/workflows/deploy.yml`
+（`withastro/action@v6` → `actions/deploy-pages@v5`）。
+线上地址 <https://rustin-beep.github.io/>。
+
+CI 跑的就是本地的 `npm run build`，所以**搜索索引在 CI 里一并产出**，无需额外步骤。
+Pages 的发布方式必须是 **Actions**（`build_type: workflow`），不是"从分支发布"。
 
 ## 文档
 

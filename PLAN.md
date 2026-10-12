@@ -282,11 +282,40 @@ Astro 构建过程中必然要清理自己的临时目录（`dist/.prerender/.vi
 - 接入方式已定方向：只依赖引擎公开契约（wasm 导出面 + 帧协议 + 生成的协议类型包），
   不抄 demo 实现。详见 Vitro 仓 2026-10-12 工作日志。
 
-## 十一、待办 / 未决
+## 十一、部署（GitHub Pages，2026-10-13 已上线）
+
+- **仓库**：`rustin-beep/rustin-beep.github.io`（public）。
+  仓库名**恰好等于 `<user>.github.io`** ⇒ GitHub Pages 的**用户主页**，
+  地址是根路径 `https://rustin-beep.github.io/`，**不需要 `base` 前缀**。
+- **站点地址单源**：`SITE_URL` 在 `src/site.config.ts`，由 `GITHUB_HANDLE` 推导；
+  `astro.config.mjs` 导入它并用作 `site`（RSS 与 sitemap 的绝对链接都靠它）。
+  换自定义域名只改这一行。
+- **流水线** `.github/workflows/deploy.yml`：
+  `actions/checkout@v7` → `withastro/action@v6`（内部 setup-node 24 / 安装 /
+  跑 `npm run build` / `upload-pages-artifact@v5`）→ `actions/deploy-pages@v5`。
+  `permissions: contents:read + pages:write + id-token:write`；
+  `concurrency: pages, cancel-in-progress: false`（不取消进行中的部署，
+  避免半成品留在线上）。
+- **它在 CI 里跑的就是我们的 build 脚本**，即 `astro build && pagefind --site dist`：
+  **搜索索引在 CI 里一并产出**，不需要额外步骤。
+- **Pages 需要手动切成 Actions 发布**：新建的 `<user>.github.io` 仓库会被 GitHub
+  自动启用 Pages，但默认 `build_type: legacy`（从分支发布）。必须 PUT 成
+  `build_type: workflow`，否则部署步骤拿不到 Pages 站点：
+  ```bash
+  gh api -X PUT repos/<owner>/<repo>/pages -f build_type=workflow
+  ```
+- git 身份是**仓库局部**配置：`rustin-beep` + `249558894+rustin-beep@users.noreply.github.com`
+  （noreply 地址，避免把个人邮箱写进公开的永久历史）。
+- `.gitattributes` 锁 `* text=auto eol=lf`：不加的话 Windows 的 `core.autocrlf=true`
+  会把检出写成 CRLF，之后每次改动都是整文件假改动、blame 失效。
+
+## 十二、待办 / 未决
 
 - [x] 依赖安装、`astro check`、`astro build` 全部跑通（见第九节实测）
-- [ ] **`site` 字段仍是占位值 `https://example.com`**——RSS 与 sitemap 已用它生成绝对地址，部署前必须改
-- [ ] 部署目标确认（GitHub Pages 主 + Cloudflare Pages 镜像？自定义域名？）
+- [x] `site` 字段改为真实地址（由 `site.config.ts` 的 `SITE_URL` 提供）
+- [x] 部署到 GitHub Pages（见第十一节）
 - [ ] **浏览器实跑一遍交互**：复制按钮、主题切换、搜索（已截图看过渲染，但这三项的
       点击行为仍未验证）
+- [ ] 数学公式渲染器未接（见 §六之三）
 - [ ] 中英混排的 `text-autospace` 实际效果需在浏览器里看一眼再定
+- [ ] 自定义域名？（若要，改 `SITE_URL` + 仓库 Pages 设置 + DNS）

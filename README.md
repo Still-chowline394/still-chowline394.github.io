@@ -1,4 +1,4 @@
-# 阿澈的博客
+# 博客
 
 Astro + MDX 的静态博客。**默认零运行时框架**，正文只有约 1 KB 内联 JS
 （主题切换 + 代码复制按钮）。
@@ -18,20 +18,6 @@ npm run gate         # check + contrast + build
 ## 环境要求
 
 Node ≥ 22.12.0、npm ≥ 9.6.5（Astro 7 的硬要求）。
-
-### 在 agent 会话内构建的注意事项
-
-如果构建是在带删除监护的 agent 会话里跑的，`npm run build` 可能在**最后清理
-`dist/.prerender/` 时以 rc=1 失败**——产物其实已经完整生成。原因是宿主给 node 注入的
-删除监护会拦截超过 50 个文件的批量删除，而 Astro 清理自身临时目录必然触发。
-
-绕过方式（只对该子进程生效，不要写进 `package.json`）：
-
-```bash
-CODEBUDDY_SAFE_DELETE_ENABLED=0 npm run build
-```
-
-在普通终端里跑**不需要**这个开关——那时监护垫片根本不会加载。
 
 ## 纪律
 

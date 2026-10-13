@@ -51,6 +51,9 @@ const year = new Date().getFullYear();
         }
       })();
     </script>
+
+    <!-- 页面可向 <head> 追加标签（如字体 preload）。见 PostLayout。 -->
+    <slot name="head" />
   </head>
   <body>
     <header class="site-header">

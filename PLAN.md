@@ -89,7 +89,9 @@ blog/
    （红头绳），但那个红太柔、撑不住"废墟"；改为此橙棕向的真锈色。
 7. **代码高亮不自建主题**——正文区已是中性面，现成主题的彩色不会污染暖调；
    `markdown.shikiConfig` 用 `github-light` / `github-dark`。
-8. **无衬线正文 + 等宽代码，纯系统字体**。不做文学轨，全站一套。
+8. **无衬线正文 + 等宽代码**。正文纯系统字体、不下载任何东西；
+   **代码块用自托管 JetBrains Mono**（latin 子集 21.2 KB），见 §六之五。
+   不做文学轨，全站一套。
 
 ## 六之二、配色定调（2026-10-13 定案）
 
@@ -211,6 +213,53 @@ figure.code-figure
 可以另做一枚简化的 16px SVG 图标只在 favicon 位用，其余位置继续用头像。
 **当前未做**（用户明确要求 logo 跟随头像）。
 
+## 六之五、代码字体（2026-10-13 接入）
+
+**正文仍是系统字体、不下载任何东西；只有代码块加载一款自托管等宽字体。**
+
+- **字体**：JetBrains Mono，**只取 latin 子集**，**21,168 字节**
+  （sha256 `14425ba9c695763c1547f48a206b7aa60350a33ae23de09f0407877f3fcd89eb`）。
+  落在 `public/fonts/jetbrains-mono-latin.woff2`；许可是 OFL-1.1，
+  全文随包 `public/fonts/OFL.txt`。
+- **只取 400 单字重**：已对构建产物核验，Shiki 的 `github-light` / `github-dark`
+  主题**只用 `color`，不用 `font-weight` 也不用 `font-style`** ⇒ 无需 700，
+  于是拿 21.2 KB 的单字重而非 31.4 KB 的可变字体，省约 10 KB。
+- **只 preload 文章页**：首页/归档/标签页没有代码块，不该白下载这 21 KB。
+  实现：`BaseLayout` 开一个 `<slot name="head" />`，`PostLayout` 往里放
+  `<link rel="preload" as="font" … crossorigin>`。
+  **`crossorigin` 是必需项**——字体按 CORS 取，缺了它 preload 与真实请求对不上，
+  会重复下载。
+- **`font-display: swap`**：先显示回退字体、到位后替换，不出现隐形文字。
+- **`unicode-range` 挡 CJK**：中文在代码块里照样走系统回退。CJK 等宽字体动辄
+  数 MB，与"不下载中文 webfont"的决定冲突；`unicode-range` 让浏览器**连尝试都
+  不尝试**，省掉一次注定失败的字体查询。
+- **★ 不走 CDN**：`fonts.gstatic.com` 在中国大陆经常不可达，必须下载自托管。
+
+### 为什么这次不算"破例下载 webfont"
+
+之前那条纪律针对的是**中文**字体（数 MB 量级）。编码字体只需 latin 子集，
+**21 KB 与全站 CSS（8 KB）同一量级**——不是同一类东西。
+
+### 一条要提前知道的默认行为
+
+JetBrains Mono **默认开启连字**（`calt`）：`->` 显示成 `→`、`!=` 显示成 `≠`、
+`>=` 显示成 `≥`。这是该字体的设计，多数编辑器也如此。若觉得在代码里会误读，
+在 `.astro-code` 加一行 `font-variant-ligatures: none` 即可关掉。
+
+### 候选字体体积（实测，供将来换用）
+
+| 字体 | latin woff2 |
+|---|---|
+| Red Hat Mono | 9.7 KB |
+| Geist Mono | 9.9 KB |
+| Source Code Pro | 11.7 KB |
+| IBM Plex Mono | 14.7 KB |
+| **JetBrains Mono** | **21.2 KB** |
+| Fira Code | 23.3 KB |
+
+> 顺带记录：**Vitro 仓库里没有任何字体文件**，其 `demo/tokens.css` 用的是系统栈
+> `ui-monospace, "Cascadia Code", Consolas, "Microsoft YaHei UI"`。
+
 ## 七、踩过的坑（写进代码注释，不重复踩）
 
 | # | 坑 | 处置 |
@@ -257,8 +306,11 @@ npm run gate       # 上面三步串联
 | 文章页 | 3（机框标注 + 复制按钮） | 2628 | **0** |
 | 搜索页 | 3（含 Pagefind 加载器） | 2351 | **0** |
 
-CSS 单文件 8038 字节（未压缩）。**外链 JS 恒为 0**——没有运行时框架，
+CSS 单文件 9236 字节（未压缩）。**外链 JS 恒为 0**——没有运行时框架，
 那 1.2–2.6 KB 全是内联脚本（gzip 后约 0.4–1.0 KB）。
+
+**字体只增加在文章页**：首页 / 归档 / 标签 / 搜索共 0 字节字体请求；
+文章页多一个 `jetbrains-mono-latin.woff2` = 21,168 字节（走 preload，与 HTML 并行取）。
 
 ## 十、挂起项：Vitro 后端接入
 

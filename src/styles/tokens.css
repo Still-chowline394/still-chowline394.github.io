@@ -31,8 +31,8 @@
     system-ui, -apple-system, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
     'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif;
   --font-mono:
-    ui-monospace, SFMono-Regular, 'Cascadia Mono', Consolas, 'Liberation Mono',
-    'Noto Sans Mono CJK SC', monospace;
+    'JetBrains Mono', ui-monospace, SFMono-Regular, 'Cascadia Mono', Consolas,
+    'Liberation Mono', 'Noto Sans Mono CJK SC', monospace;
 
   /* --- 字号阶梯 --- */
   --fs-xs: 0.8125rem; /* 13px  元信息 */

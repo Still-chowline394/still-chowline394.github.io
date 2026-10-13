@@ -32,6 +32,9 @@ Node ≥ 22.12.0、npm ≥ 9.6.5（Astro 7 的硬要求）。
    `https://<user>.github.io`），影响 sitemap 与 RSS 的绝对地址。换域名只改那一行。
 5. **文章标题从 `##` 起**，不要用 `#`——否则单篇出现多个 h1。
 6. **构建前先停掉 `astro preview`**，否则会 `EBUSY: rmdir dist/.prerender/chunks`。
+7. **字体只有一款自托管**：代码块用的 JetBrains Mono latin 子集
+   （`public/fonts/`，21 KB，OFL-1.1）。**不要改用 Google Fonts CDN**——
+   `fonts.gstatic.com` 在中国大陆经常不可达。正文仍是系统字体、不下载任何东西。
 
 ## 部署
 

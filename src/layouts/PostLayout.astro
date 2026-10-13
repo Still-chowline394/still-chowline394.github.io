@@ -17,6 +17,20 @@ const fmt = new Intl.DateTimeFormat('zh-CN', {
 ---
 
 <BaseLayout title={post.data.title} description={post.data.description}>
+  <!--
+    代码块用的自托管等宽字体。**只在文章页 preload**——首页/归档/标签页没有
+    代码块，没必要让它们白下载这 21 KB。crossorigin 是字体 preload 的必需项
+    （字体按 CORS 取，缺了它 preload 与真实请求对不上，会重复下载）。
+  -->
+  <link
+    slot="head"
+    rel="preload"
+    as="font"
+    type="font/woff2"
+    href="/fonts/jetbrains-mono-latin.woff2"
+    crossorigin
+  />
+
   <article>
     <header class="article-header">
       <h1 class="article-title">{post.data.title}</h1>

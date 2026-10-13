@@ -1,0 +1,29 @@
+/* ============================================================================
+   自托管字体
+   ----------------------------------------------------------------------------
+   只有一款：JetBrains Mono，且**只含 latin 子集**——21,168 字节。
+
+   ★ 为什么不走 Google Fonts CDN：`fonts.gstatic.com` 在中国大陆经常不可达。
+     自托管 = 一个文件、一次请求、完全可控。
+   ★ 为什么只取 latin 子集：CJK 等宽字体动辄数 MB，与"正文不用 webfont"的
+     决定正面冲突。中文在代码里照样走系统回退——`unicode-range` 把 CJK 挡在
+     外面，浏览器连尝试都不会尝试，省掉一次注定失败的字体查询。
+   ★ 为什么只要 400：已对构建产物核验，Shiki 的 github-light / github-dark
+     主题**只用 color、不用 font-weight 也不用 font-style**，故无需 700。
+     取单字重 21.2 KB，而不是可变字体 31.4 KB。
+   ★ `font-display: swap`：先显示回退字体、字体到位后替换，不出现隐形文字。
+
+   许可证：SIL Open Font License 1.1，全文见 `public/fonts/OFL.txt`。
+   来源 https://fonts.google.com/specimen/JetBrains+Mono （v24）
+   ========================================================================== */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/jetbrains-mono-latin.woff2') format('woff2');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212,
+    U+2215, U+FEFF, U+FFFD;
+}
